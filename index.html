@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Retro Geeks</title>
+
+<style>
+body {
+    margin: 0;
+    background: #111;
+    color: white;
+    font-family: Arial, sans-serif;
+}
+
+header {
+    background: #2b2b2b;
+    padding: 14px 25px;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+main {
+    padding: 25px;
+}
+
+a {
+    color: #5ec7ff;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+input {
+    width: 60%;
+    padding: 13px;
+    background: #333;
+    color: white;
+    border: 1px solid #555;
+    border-radius: 6px;
+    font-size: 17px;
+}
+
+.section-menu {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+}
+
+.section-btn {
+    padding: 12px 18px;
+    background: #222;
+    color: white;
+    border: 1px solid #555;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.section-btn.active {
+    color: #5ec7ff;
+    border-color: #5ec7ff;
+    background: #2d2d2d;
+}
+
+.grid {
+    margin-top: 25px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 15px;
+}
+
+.card {
+    background: #1d1d1d;
+    border: 1px solid #68bfff;
+    border-radius: 6px;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.card img {
+    width: 100%;
+    height: 170px;
+    object-fit: cover;
+    background: #333;
+}
+
+.card div {
+    padding: 12px;
+}
+
+.card h3 {
+    color: #5ec7ff;
+    margin: 0 0 10px;
+}
+
+.board-page {
+    display: none;
+}
+
+.back {
+    margin-bottom: 20px;
+    display: inline-block;
+}
+
+.board-layout {
+    display: flex;
+    gap: 25px;
+}
+
+.board-photo {
+    width: 420px;
+    background: #222;
+    padding: 10px;
+}
+
+.board-photo img {
+    width: 100%;
+    cursor: zoom-in;
+}
+
+.viewer {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.92);
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.viewer img {
+    max-width: 90%;
+    max-height: 90%;
+}
+
+.close-viewer {
+    position: absolute;
+    top: 20px;
+    right: 35px;
+    color: white;
+    font-size: 34px;
+    cursor: pointer;
+}
+
+.content {
+    flex: 1;
+}
+
+.tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 0;
+}
+
+.tab {
+    padding: 14px 18px;
+    background: #222;
+    border: 1px solid #555;
+    cursor: pointer;
+}
+
+.tab.active {
+    border-color: #70c8ff;
+    background: #2d2d2d;
+}
+
+.panel {
+    background: #1b1b1b;
+    padding: 20px;
+    border-top: 1px solid #444;
+    min-height: 300px;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 50px;
+}
+
+.info-item b {
+    color: #ddd;
+}
+
+.tag {
+    border: 1px solid #666;
+    padding: 3px 7px;
+    border-radius: 4px;
+    color: #65c8ff;
+}
+
+.file-link {
+    display: block;
+    margin: 10px 0;
+}
+</style>
+</head>
+
+<body>
+
+<header>Retro Geeks</header>
+
+<main>
+
+<section id="catalog">
+    <h2>Quick search</h2>
+    <input id="search" oninput="renderCatalog()" placeholder="Name, chipset, socket, manufacturer...">
+
+    <div class="section-menu" id="sectionMenu"></div>
+
+    <div class="grid" id="cards"></div>
+</section>
+
+<section id="boardPage" class="board-page">
+    <a class="back" onclick="showCatalog()">← Back to catalog</a>
+
+    <h1 id="boardTitle"></h1>
+
+    <div class="board-layout">
+        <div class="board-photo">
+            <img id="boardImage" onclick="openViewer(this.src)">
+            <p id="boardImageCaption"></p>
+        </div>
+
+        <div class="content">
+            <div class="tabs" id="tabs">
+                <div class="tab active" onclick="openTab('description')">Description</div>
+                <div class="tab" onclick="openTab('chips')">Chips</div>
+                <div class="tab" onclick="openTab('bios')">BIOS</div>
+                <div class="tab" onclick="openTab('drivers')">Drivers</div>
+                <div class="tab" onclick="openTab('docs')">Documentation</div>
+                <div class="tab" onclick="openTab('logs')">Logs</div>
+            </div>
+
+            <div class="panel" id="panel"></div>
+        </div>
+    </div>
+</section>
+
+</main>
+
+<script>
+const sections = [
+    {
+        id: "motherboards",
+        title: "Motherboards",
+        type: "motherboard",
+        items: [
+            {
+                id: 1,
+                name: "Shuttle AN35N ULTRA",
+                image: "images/an35nultra.png",
+                manufacturer: "Shuttle",
+                chipset: "NForce 2 Ultra 400",
+                socket: "Socket 462",
+                fsb: "200MHz / 266MHz / 333MHz / 400MHz",
+                formFactor: "ATX",
+                dimensions: "305mm x 244mm",
+                maxRam: "3GB(PC3200 DDR)",
+                ramType: "DDR UDIMM",
+                psu: "ATX 20-pin, ATX 4-pin P4",
+                ports: [
+                    "1x Floppy interface",
+                    "1x Gameport",
+                    "2x IDE interface",
+                    "1x PS/2 keyboard",
+                    "1x PS/2 mouse",
+                    "1x Parallel",
+                    "1x RJ-45 LAN",
+                    "2x Serial",
+                    "6x USB 2.0"
+                ],
+                slots: [
+                    "1x 1.5V AGP",
+                    "5x 32-bit PCI"
+                ],
+                chips: [
+                    "Northbridge: Nvidia NV1F",
+                    "Southbridge: Nvidia MCP2",
+                    "Audio: Realtek ALC650(AC97)",
+                    "Network: Realtek RTL8201BL(Fast Ethernet PHY)",
+                    "Power Regulation: Attansic Technology ATXP1(VID controller, Richtek RT9241)",
+                    "Super I/O: ITE IT8712F"
+                ],
+                cpu: [
+                    "AMD K7 - Athlon XP/M"
+                ],
+                bios: [
+                    { name: "BIOS 1.30", link: "files/asrock-m266a-bios-130.zip" },
+                    { name: "BIOS 1.20", link: "files/asrock-m266a-bios-120.zip" }
+                ],
+                drivers: [
+                    { name: "VIA 4in1 Driver", link: "files/via-4in1.zip" },
+                    { name: "Audio Driver", link: "files/audio.zip" }
+                ],
+                docs: [
+                    { name: "Manual PDF", link: "files/asrock-m266a-manual.pdf" }
+                ],
+                logs: [
+                    "Added motherboard page",
+                    "Added BIOS files",
+                    "Added image"
+                ]
+            },
+
+            {
+                id: 2,
+                name: "Albatron PX865PE PRO v2.0",
+                image: "images/px865peprov2.jpg",
+                manufacturer: "Albatron",
+                chipset: "Intel 865PE",
+                socket: "Socket 478",
+                fsb: "400/533/800MHz",
+                formFactor: "ATX",
+                dimensions: "305x244mm",
+                maxRam: "4GB",
+                ramType: "DDR UDIMM",
+                psu: "ATX 20-pin, ATX 4-pin P4",
+                ports: [
+                    "1x 3.5mm Audio Combo",
+                    "1x Floppy interface",
+                    "2x IDE interface",
+                    "1x PS/2 keyboard",
+                    "1x PS/2 mouse",
+                    "1x Parallel",
+                    "1x RJ-45 LAN",
+                    "1x S/PDIF",
+                    "2x SATA I",
+                    "1x Serial",
+                    "8x USB 2.0"
+                ],
+                slots: [
+                    "1x 1.5V AGP",
+                    "5x 32-bit PCI"
+                ],
+                chips: [
+                    "Northbridge: Intel 82865PE(MCH)",
+                    "Southbridge: Intel 82801EB(ICH5)",
+                    "Audio: Realtek ALC655(AC97)",
+                    "Network: None"
+                ],
+                cpu: [
+                    "Pentium 4 (Prescott)",
+                    "Pentium 4 (Northwood)",
+                    "Celeron D (Prescott-256)",
+                    "Celeron (Northwood-128)"
+                ],
+                bios: [],
+                drivers: [],
+                docs: [],
+                logs: []
+            },
+
+            {
+                id: 3,
+                name: "Asus P5KC",
+                image: "images/p5kc.jpg",
+                manufacturer: "ASUS",
+                chipset: "Intel P35",
+                socket: "Socket T(LGA 775)",
+                fsb: "800/1066/1333MHz",
+                formFactor: "ATX",
+                dimensions: "305x244mm",
+                maxRam: "8GB(DDR2), 4GB(DDR3)",
+                ramType: "DDR3 UDIMM, DDR2 UDIMM",
+                psu: "ATX 24-pin, ATX 4-pin",
+                ports: [
+                    "1x 3.5mm Audio Combo",
+                    "1x Floppy interface",
+                    "1x IDE interface",
+                    "2x FireWire 400",
+                    "1x PS/2 keyboard",
+                    "1x RJ-45 LAN",
+                    "1x S/PDIF",
+                    "5x SATA II",
+                    "1x Serial",
+                    "1x Toslink",
+                    "1x eSATA",
+                    "12x USB 2.0"
+                ],
+                slots: [
+                    "1x PCI-1x",
+                    "1x PCI-16x",
+                    "1x PCI-16x 4x",
+                    "3x 32-bit PCI"
+                ],
+                chips: [
+                    "Northbridge: Intel 82P35(MCH)",
+                    "Southbridge: Intel 82801IB(ICH8)",
+                    "Audio: Realtek ALC883(High Definition Audio)"
+                ],
+                cpu: [
+                    "Intel Core 2 Quad (Yorkfield)",
+                    "Intel Core 2 Quad (Kentsfield)",
+                    "Intel Pentium Extreme Edition (Presler XE)",
+                    "Intel Pentium Extreme Edition (Smithfield XE)",
+                    "Intel Pentium 4 Extreme Edition (Prescott)",
+                    "Intel Core 2 Duo (Wolfdale)",
+                    "Intel Pentium 4 (Cedar Mill)",
+                    "Intel Core 2 Duo (Conroe/Allendale)",
+                    "Intel Pentium D (Presler)",
+                    "Intel Pentium D (Smithfield)",
+                    "Intel Pentium 4 (Prescott)",
+                    "Intel Core 2 Extreme (Yorkfield)",
+                    "Intel Xeon (Yorkfield)",
+                    "Intel Core 2 Extreme (Kentsfield)",
+                    "Intel Xeon (Kentsfield)",
+                    "Intel Celeron D (Prescott-256)",
+                    "Intel Celeron Dual-Core (Wolfdale)",
+                    "Intel Pentium Dual-Core (Wolfdale)",
+                    "Intel Xeon (Wolfdale)",
+                    "Intel Celeron D (Cedar Mill-512)",
+                    "Intel Pentium Dual-Core (Allendale)",
+                    "Intel Celeron Dual-Core (Allendale)",
+                    "Intel Xeon (Conroe/Allendale)",
+                    "Intel Celeron (Conroe-L)"
+                ],
+                bios: [],
+                drivers: [],
+                docs: [],
+                logs: []
+            },
+
+            {
+                id: 4,
+                name: "ECS P6IPAT",
+                image: "images/p6ipat1.jpg",
+                manufacturer: "Elitgroup",
+                chipset: "Intel 815EP",
+                socket: "Socket 370",
+                fsb: "100/133MHz",
+                formFactor: "ATX",
+                dimensions: "305x244mm",
+                maxRam: "512MB",
+                ramType: "SDR UDIMM",
+                psu: "ATX 20-pin",
+                ports: [
+                    "1x Floppy interface",
+                    "1x Gameport",
+                    "2x IDE interface",
+                    "1x PS/2 keyboard",
+                    "1x PS/2 mouse",
+                    "1x Parallel",
+                    "2x Serial",
+                    "4x USB 1.x"
+                ],
+                slots: [
+                    "1x Universal AGP",
+                    "1x CNR",
+                    "6x 32-bit PCI"
+                ],
+                chips: [
+                    "Northbridge: Intel FW82815EP (Solano MCH)",
+                    "Southbridge: Intel FW82801BA (ICH2)",
+                    "Audio: Realtek ALC201A (AC97)"
+                ],
+                cpu: [
+                    "Intel Pentium III (Coppermine)",
+                    "Intel Pentium III (Tualatin)",
+                    "Intel Celeron (Coppermine-128)",
+                    "Intel Pentium III (Coppermine-T)",
+                    "Intel Celeron (Tualatin-256)"
+                ],
+                bios: [],
+                drivers: [],
+                docs: [],
+                logs: []
+            },
+
+            {
+                id: 5,
+                name: "ECS 848P-A rev 2.0",
+                image: "images/848p-a.jpg",
+                manufacturer: "Elitgroup",
+                chipset: "Intel 848P",
+                socket: "Socket 478",
+                fsb: "400/533/800MHz",
+                formFactor: "ATX",
+                dimensions: "305x220mm",
+                maxRam: "2GB",
+                ramType: "DDR UDIMM",
+                psu: "ATX 20-pin, ATX 4-pin P4",
+                ports: [
+                    "1x 3.5mm Audio Combo",
+                    "1x Floppy interface",
+                    "2x IDE interface",
+                    "1x PS/2 keyboard",
+                    "1x PS/2 mouse",
+                    "1x Parallel",
+                    "1x Serial",
+                    "1x RJ-45 LAN",
+                    "1x S/PDIF",
+                    "2x SATA I",
+                    "4x USB 2.0"
+                ],
+                slots: [
+                    "1x 1.5V AGP",
+                    "1x CNR",
+                    "5x 32-bit PCI"
+                ],
+                chips: [
+                    "Northbridge: Intel 82848P (MCH)",
+                    "Southbridge: Intel 82801EB (ICH5)",
+                    "Audio: Realtek ALC655 (AC97)",
+                    "Network: Realtek RTL8100C(Fast Ethernet 10/100)"
+                ],
+                cpu: [
+                    "Pentium 4 (Prescott)",
+                    "Pentium 4 (Northwood)",
+                    "Celeron D (Prescott-256)",
+                    "Celeron (Northwood-128)"
+                ],
+                bios: [],
+                drivers: [],
+                docs: [],
+                logs: []
+            },
+
+            {
+                id: 6,
+                name: "ECS KT600-A rev 1.0",
+                image: "images/kt600-a.png",
+                manufacturer: "Elitgroup",
+                chipset: "VIA KT600",
+                socket: "Socket 478",
+                fsb: "200/266/333/400MHz",
+                formFactor: "ATX",
+                dimensions: "305x230mm",
+                maxRam: "3GB",
+                ramType: "DDR UDIMM",
+                psu: "ATX 20-pin",
+                ports: [
+                    "1x 3.5mm Audio Combo",
+                    "1x Floppy interface",
+                    "1x Gameport",
+                    "2x IDE interface",
+                    "1x PS/2 keyboard",
+                    "1x PS/2 mouse",
+                    "1x Parallel",
+                    "2x Serial",
+                    "1x RJ-45 LAN",
+                    "1x S/PDIF",
+                    "2x SATA I",
+                    "8x USB 2.0"
+                ],
+                slots: [
+                    "1x 1.5V AGP",
+                    "1x CNR",
+                    "4x 32-bit PCI"
+                ],
+                chips: [
+                    "Northbridge: VIA VT8377 (KT600)",
+                    "Southbridge: VIA VT8237",
+                    "Audio: Realtek ALC655 (AC97)",
+                    "VIA VT6103 (Rhine II Fast Ethernet PHY)"
+                ],
+                cpu: [
+                    "AMD K7 - Athlon XP (Palomino)",
+                    "AMD K7 - Athlon XP (Thoroughbred)",
+                    "AMD K7 - Athlon XP (Barton)",
+                    "AMD K7 - Athlon (Thunderbird)",
+                    "AMD K7 - Duron (Morgan)",
+                    "AMD K7 - Athlon MP (Palomino)",
+                    "AMD K7 - Sempron (Thoroughbred)",
+                    "AMD K7 - Duron (Applebred)",
+                    "AMD K7 - Geode NX (Thoroughbred)",
+                    "AMD K7 - Athlon MP (Thoroughbred)",
+                    "AMD K7 - Sempron (Barton)",
+                    "AMD K7 - Sempron (Thorton)",
+                    "AMD K7 - Athlon XP (Thorton)",
+                    "AMD K7 - Athlon MP (Barton)",
+                    "AMD K7 - Duron (Spitfire)"
+
+                ],
+                bios: [],
+                drivers: [],
+                docs: [],
+                logs: []
+            }
+        ]
+    },
+
+    {
+    id: "processors",
+    title: "Processors",
+    type: "generic",
+    items: [
+        {
+            id: "cpu1",
+            name: "AMD Athlon XP 2000+ (AXDA2000DKT3C)",
+            image: "images/XP2000.png",
+            manufacturer: "AMD",
+            info: {
+                Socket: "Socket 462",
+                Core: "Thoroughbred-B",
+                Frequency: "1667MHz",
+                Multiplier: "12.5x",
+                Bus: "266MHz",
+                "L1 cache": "64KB+64KB",
+                "L2 cache": "256KB",
+                "Power Voltage": "1.65V",
+                "TDP": "60W",
+                "Core count": "1",
+                "Thread count": "1"
+            }
+        },
+        {
+            id: "cpu2",
+            name: "Intel Pentium Dual-Core E2180 (HH80557PG0411M)",
+            image: "images/2180.png",
+            manufacturer: "Intel",
+            info: {
+                Socket: "Socket T(LGA 775)",
+                Core: "Intel Pentium Dual-Core (Allendale)",
+                Frequency: "2000MHz",
+                Multiplier: "10x",
+                Bus: "800MHz",
+                "L1 cache": "32KB+32KB",
+                "L2 cache": "1MB",
+                "Power Voltage": "0.85V",
+                "TDP": "65W",
+                "Core count": "2",
+                "Thread count": "2"
+            }
+        },
+        {
+            id: "cpu3",
+            name: "Intel Celeron 1000A (RK80530RY001256)",
+            image: "images/cltl1000a.jpg",
+            manufacturer: "Intel",
+            info: {
+                Socket: "Socket 370",
+                Core: "Intel Celeron (Tualatin-256)",
+                Frequency: "1000MHz",
+                Multiplier: "10x",
+                Bus: "100MHz",
+                "L1 cache": "16KB+16KB",
+                "L2 cache": "256KB",
+                "Power Voltage": "1.475V",
+                "TDP": "28W",
+                "Core count": "1",
+                "Thread count": "1"
+            }
+        },
+        {
+            id: "cpu4",
+            name: "Intel Celeron 1200 (RK80530RY009256)",
+            image: "images/cltl1200.jpg",
+            manufacturer: "Intel",
+            info: {
+                Socket: "Socket 370",
+                Core: "Intel Celeron (Tualatin-256)",
+                Frequency: "1200MHz",
+                Multiplier: "12x",
+                Bus: "100MHz",
+                "L1 cache": "16KB+16KB",
+                "L2 cache": "256KB",
+                "Power Voltage": "1.5V",
+                "TDP": "30W",
+                "Core count": "1",
+                "Thread count": "1"
+            }
+        }
+    ]
+},
+
+    {
+        id: "videocards",
+        title: "Video cards",
+        type: "generic",
+        items: [
+            {
+                id: "gpu1",
+                name: "Sapphire Radeon 9600XT 256MB DDR2 V/D/VO",
+                image: "images/fx5200.jpg",
+                manufacturer: "Sapphire",
+                info: {
+                    Interface: "1.5V AGP",
+                    Signaling: "AGP 8x",
+                    Memory: "256MB DDR2",
+                    Chip: "RV360"
+                    
+                },
+                bios: [],
+                drivers: [],
+                docs: [],
+                logs: []
+            },
+            {
+                id: "gpu2",
+                name: "ATi Rage Fury",
+                image: "images/fury.jpg",
+                manufacturer: "ATi",
+                info: {
+                    Interface: "3.3V AGP",
+                    Signaling: "AGP 2x",
+                    Memory: "32MB SDR",
+                    Chip: "Rage 128 GL"
+                    
+                },
+                bios: [],
+                drivers: [],
+                docs: [],
+                logs: []
+            },
+            {
+                id: "gpu3",
+                name: "ATi Rage IIc AGP(SDRAM)",
+                image: "images/IIC.jpg",
+                manufacturer: "ATi",
+                info: {
+                    Interface: "3.3V AGP",
+                    Signaling: "AGP 1x",
+                    Memory: "4MB SDR",
+                    Chip: "Rage 2"
+                    
+                },
+                bios: [],
+                drivers: [],
+                docs: [],
+                logs: []
+            },
+            {
+                id: "gpu4",
+                name: "Cardexpert 9503 S3 Trio64V2/DX",
+                image: "images/trio64v2dx.jpg",
+                manufacturer: "Cardexpert",
+                info: {
+                    Interface: "5V 32-bit PCI",
+                    Signaling: "32-bit PCI",
+                    Memory: "1MB EDO",
+                    Chip: "S3 86C775 (Trio64V2/DX)"
+                    
+                },
+                bios: [],
+                drivers: [],
+                docs: [],
+                logs: []
+            },
+            {
+                id: "gpu5",
+                name: "Shuttle Spacewalker GeForce 2 MX 200 (SDR)",
+                image: "images/gf2mx200.jpg",
+                manufacturer: "Shuttle",
+                info: {
+                    Interface: "Universal AGP",
+                    Signaling: "AGP 4x, 8x",
+                    Memory: "32MB SDR",
+                    Chip: "NV11"
+                    
+                },
+                bios: [],
+                drivers: [],
+                docs: [],
+                logs: []
+            },
+            {
+                id: "gpu6",
+                name: "Chaintech GeForce 7600GS(DDR2)",
+                image: "images/7600gs.jpg",
+                manufacturer: "Chaintech",
+                info: {
+                    Interface: "PCIe x16",
+                    Signaling: "PCIe 1.0",
+                    Memory: "256MB DDR2",
+                    Chip: "G73"
+                    
+                },
+                bios: [],
+                drivers: [],
+                docs: [],
+                logs: []
+            }
+        ]
+    },
+
+    {
+        id: "expansioncards",
+        title: "Other cards",
+        type: "generic",
+        items: [
+            {
+                id: "card1",
+                name: "Creative Sound Blaster Live!",
+                image: "images/sblive.jpg",
+                manufacturer: "Creative",
+                info: {
+                    Type: "Sound card",
+                    Bus: "PCI",
+                    Chip: "EMU10K1"
+                }
+            }
+        ]
+    },
+
+    {
+        id: "harddrives",
+        title: "Hard drives",
+        type: "generic",
+        items: [
+            {
+                id: "hdd1",
+                name: "Hitachi HDS728080PLAT20 (Deskstar 7K80)",
+                image: "images/deskstar82.jpg",
+                manufacturer: "Hitachi",
+                info: {
+                    Capacity: "82.3GB",
+                    Interface: "ATA/ATAPI-7 (Ultra ATA/133)",
+                    RPM: "7200"
+                }
+            }
+        ]
+    }
+];
+
+let currentSectionId = "motherboards";
+let currentBoard = null;
+let currentGenericItem = null;
+
+function getCurrentSection() {
+    return sections.find(section => section.id === currentSectionId);
+}
+
+function renderSectionMenu() {
+    const menu = document.getElementById("sectionMenu");
+    menu.innerHTML = "";
+
+    sections.forEach(section => {
+        menu.innerHTML += `
+            <button class="section-btn ${section.id === currentSectionId ? "active" : ""}" onclick="changeSection('${section.id}')">
+                ${section.title}
+            </button>
+        `;
+    });
+}
+
+function changeSection(sectionId) {
+    currentSectionId = sectionId;
+    renderCatalog();
+}
+
+function renderCatalog() {
+    renderSectionMenu();
+
+    const search = document.getElementById("search").value.toLowerCase();
+    const cards = document.getElementById("cards");
+    const section = getCurrentSection();
+
+    cards.innerHTML = "";
+
+    section.items
+        .filter(item => {
+            let text = item.name + " " + item.manufacturer;
+
+            if (section.type === "motherboard") {
+                text += " " + item.chipset + " " + item.socket + " " + item.ramType;
+            } else {
+                text += " " + Object.values(item.info).join(" ");
+            }
+
+            return text.toLowerCase().includes(search);
+        })
+        .forEach(item => {
+            let cardInfo = "";
+
+            if (section.type === "motherboard") {
+                cardInfo = `
+                    <p><b>Socket:</b> ${item.socket}</p>
+                    <p><b>Chipset:</b> ${item.chipset}</p>
+                    <p><b>RAM:</b> ${item.ramType}</p>
+                `;
+            } else {
+                cardInfo = Object.entries(item.info).map(([key, value]) => {
+                    return `<p><b>${key}:</b> ${value}</p>`;
+                }).join("");
+            }
+
+            const action = section.type === "motherboard"
+                ? `openBoard(${item.id})`
+                : `openGenericItem('${section.id}', '${item.id}')`;
+
+            cards.innerHTML += `
+                <div class="card" onclick="${action}">
+                    <img src="${item.image}">
+                    <div>
+                        <h3>${item.name}</h3>
+                        ${cardInfo}
+                    </div>
+                </div>
+            `;
+        });
+}
+
+function openBoard(id) {
+    const section = sections.find(section => section.id === "motherboards");
+    currentBoard = section.items.find(board => board.id === id);
+    currentGenericItem = null;
+
+    document.getElementById("catalog").style.display = "none";
+    document.getElementById("boardPage").style.display = "block";
+    document.getElementById("tabs").style.display = "flex";
+
+    document.getElementById("boardTitle").innerText = currentBoard.name;
+    document.getElementById("boardImage").src = currentBoard.image;
+    document.getElementById("boardImageCaption").innerText = "Image of " + currentBoard.name;
+
+    openTab("description");
+}
+
+function openGenericItem(sectionId, itemId) {
+    const section = sections.find(section => section.id === sectionId);
+    currentGenericItem = section.items.find(item => item.id === itemId);
+    currentBoard = null;
+
+    document.getElementById("catalog").style.display = "none";
+    document.getElementById("boardPage").style.display = "block";
+    const tabs = document.getElementById("tabs");
+
+// скрываем лишние вкладки
+    tabs.children[1].style.display = "none"; // Chips
+
+    tabs.style.display = "flex";
+
+    document.getElementById("boardTitle").innerText = currentGenericItem.name;
+    document.getElementById("boardImage").src = currentGenericItem.image;
+    document.getElementById("boardImageCaption").innerText = "Image of " + currentGenericItem.name;
+
+    const p = document.getElementById("panel");
+
+    p.innerHTML = `
+        <h3>Description</h3>
+        <div class="info-grid">
+            ${Object.entries(currentGenericItem.info).map(([key, value]) => `
+                <div class="info-item">
+                    <b>${key}:</b> <span class="tag">${value}</span>
+                </div>
+            `).join("")}
+        </div>
+    `;
+}
+
+function showCatalog() {
+    document.getElementById("catalog").style.display = "block";
+    document.getElementById("boardPage").style.display = "none";
+}
+
+function openTab(tabName) {
+    if (currentGenericItem) {
+    const p = document.getElementById("panel");
+
+    if (tabName === "description") {
+        p.innerHTML = `
+            <div class="info-grid">
+                ${Object.entries(currentGenericItem.info).map(([key, value]) => `
+                    <div class="info-item">
+                        <b>${key}:</b> <span class="tag">${value}</span>
+                    </div>
+                `).join("")}
+            </div>
+        `;
+    }
+
+    if (tabName === "bios") {
+        p.innerHTML = `<h3>BIOS</h3>`;
+    }
+
+    if (tabName === "drivers") {
+        p.innerHTML = `<h3>Drivers</h3>`;
+    }
+
+    if (tabName === "docs") {
+        p.innerHTML = `<h3>Documentation</h3>`;
+    }
+
+    if (tabName === "logs") {
+        p.innerHTML = `<h3>Logs</h3>`;
+    }
+
+    return;
+}
+
+    if (!currentBoard) return;
+
+    document.querySelectorAll(".tab").forEach(tab => tab.classList.remove("active"));
+
+    const tabs = document.querySelectorAll(".tab");
+    tabs.forEach(tab => {
+        if (tab.innerText.toLowerCase().startsWith(tabName)) {
+            tab.classList.add("active");
+        }
+    });
+
+    const p = document.getElementById("panel");
+
+    if (tabName === "description") {
+        p.innerHTML = `
+            <div class="info-grid">
+                <div class="info-item"><b>Chipset:</b> <span class="tag">${currentBoard.chipset}</span></div>
+                <div class="info-item"><b>Max RAM size:</b> <span class="tag">${currentBoard.maxRam}</span></div>
+                <div class="info-item"><b>Socket:</b> <span class="tag">${currentBoard.socket}</span></div>
+                <div class="info-item"><b>RAM type:</b> <span class="tag">${currentBoard.ramType}</span></div>
+                <div class="info-item"><b>FSB speeds:</b> ${currentBoard.fsb}</div>
+                <div class="info-item"><b>PSU connector:</b> <span class="tag">${currentBoard.psu}</span></div>
+                <div class="info-item"><b>Form factor:</b> ${currentBoard.formFactor}</div>
+                <div class="info-item"><b>Dimensions:</b> ${currentBoard.dimensions}</div>
+            </div>
+
+            <hr>
+
+            <h3>I/O ports</h3>
+            <ul>${currentBoard.ports.map(x => `<li>${x}</li>`).join("")}</ul>
+
+            <h3>Expansion slots</h3>
+            <ul>${currentBoard.slots.map(x => `<li>${x}</li>`).join("")}</ul>
+        `;
+    }
+
+    if (tabName === "chips") {
+        p.innerHTML = `
+            <div class="inner-section">
+                <h3>Chips</h3>
+                <ul>
+                    ${currentBoard.chips.map(x => `<li>${x}</li>`).join("")}
+                </ul>
+            </div>
+
+            <hr>
+
+            <div class="inner-section">
+                <h3>CPU family support</h3>
+                <ul>
+                    ${currentBoard.cpu.map(x => `<li>${x}</li>`).join("")}
+                </ul>
+            </div>
+        `;
+    }
+
+    if (tabName === "bios") {
+        p.innerHTML = `<h3>BIOS</h3>` + currentBoard.bios.map(x =>
+            `<a class="file-link" href="${x.link}" download>${x.name}</a>`
+        ).join("");
+    }
+
+    if (tabName === "drivers") {
+        p.innerHTML = `<h3>Drivers</h3>` + currentBoard.drivers.map(x =>
+            `<a class="file-link" href="${x.link}" download>${x.name}</a>`
+        ).join("");
+    }
+
+    if (tabName === "docs") {
+        p.innerHTML = `<h3>Documentation</h3>` + currentBoard.docs.map(x =>
+            `<a class="file-link" href="${x.link}" download>${x.name}</a>`
+        ).join("");
+    }
+
+    if (tabName === "logs") {
+        p.innerHTML = `<h3>Logs</h3><ul>${currentBoard.logs.map(x => `<li>${x}</li>`).join("")}</ul>`;
+    }
+}
+
+function openViewer(src) {
+    document.getElementById("viewerImg").src = src;
+    document.getElementById("imageViewer").style.display = "flex";
+}
+
+function closeViewer() {
+    document.getElementById("imageViewer").style.display = "none";
+}
+
+function closeViewerByBackground(event) {
+    if (event.target.id === "imageViewer") {
+        closeViewer();
+    }
+}
+
+document.addEventListener("keydown", function(event) {
+    if (event.key === "Escape") {
+        closeViewer();
+    }
+});
+
+renderCatalog();
+</script>
+
+<div id="imageViewer" class="viewer" onclick="closeViewerByBackground(event)">
+    <span class="close-viewer" onclick="closeViewer()">✖</span>
+    <img id="viewerImg">
+</div>
+
+</body>
+</html>
